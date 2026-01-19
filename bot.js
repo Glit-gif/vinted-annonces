@@ -1,11 +1,9 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const fetchAnnonces = require('./services/fetchAnnonces');
-const { getCategorieSalon } = require('./utils/categories');
+const { Client, GatewayIntentBits } = require("discord.js");
+const fs = require("fs");
+const { fetchVintedItems } = require("./services/vintedScraper");
+const { getCategoryChannel } = require("./utils/categories");
+const config = require("./config.json");
 
-const PREFIX = 'v!';
-let filtres = [];
-
-// Création du client Discord
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -14,104 +12,45 @@ const client = new Client({
   ]
 });
 
-// Quand le bot est connecté
-client.once('ready', () => {
-  console.log(`✅ Bot connecté en tant que ${client.user.tag}`);
+let seen = JSON.parse(fs.readFileSync("./data/seen.json"));
+
+client.once("ready", () => {
+  console.log("Bot connecté :", client.user.tag);
+
+  setInterval(checkVinted, 2 * 60 * 1000); // toutes les 2 minutes
 });
 
-// Gestion des messages
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith(PREFIX)) return;
+async function checkVinted() {
+  const items = await fetchVintedItems({
+    search_text: "",
+  });
 
-  const commande = message.content
-    .slice(PREFIX.length)
-    .trim()
-    .toLowerCase();
+  for (const item of items) {
+    if (seen.includes(item.id)) continue;
 
-  // Ajouter un filtre (ex: v!ralph)
-  if (
-    commande !== 'showfilters' &&
-    commande !== 'clearfilters' &&
-    commande !== 'marques'
-  ) {
-    if (!filtres.includes(commande)) {
-      filtres.push(commande);
-      message.channel.send(`✅ Filtre ajouté : **${commande}**`);
-    } else {
-      message.channel.send(`⚠️ Le filtre **${commande}** est déjà actif`);
-    }
-    return;
-  }
+    seen.push(item.id);
+    fs.writeFileSync("./data/seen.json", JSON.stringify(seen, null, 2));
 
-  // Afficher les filtres
-  if (commande === 'showfilters') {
-    if (filtres.length === 0) {
-      message.channel.send('ℹ️ Aucun filtre actif');
-    } else {
-      message.channel.send(`🔎 Filtres actifs : ${filtres.join(', ')}`);
-    }
-    return;
-  }
-
-  // Supprimer les filtres
-  if (commande === 'clearfilters') {
-    filtres = [];
-    message.channel.send('🧹 Tous les filtres ont été supprimés');
-    return;
-  }
-
-  // Marques connues
-  if (commande === 'marques') {
-    message.channel.send(
-      '📦 Marques connues : ralph, nike, adidas, carhartt, lacoste'
+    const category = getCategoryChannel(item.title);
+    const channel = client.channels.cache.find(
+      c => c.name === category
     );
-    return;
-  }
-});
 
-// Boucle principale : récupération des annonces
-async function loopAnnonces() {
-  try {
-    const annonces = await fetchAnnonces();
+    if (!channel) continue;
 
-    for (const annonce of annonces) {
-      // Appliquer les filtres
-      if (
-        filtres.length > 0 &&
-        !filtres.includes(annonce.marque.toLowerCase())
-      ) {
-        continue;
-      }
+    const price = item.price?.amount || "?";
+    const resale = Math.round(price * 2.5);
+    const benefit = resale - price;
 
-      const salonName = getCategorieSalon(annonce.categorie);
-      const guild = client.guilds.cache.first();
-      if (!guild) return;
-
-      const salon = guild.channels.cache.find(
-        (c) => c.name === salonName
-      );
-
-      if (!salon) continue;
-
-      const benefice = annonce.revente - annonce.prix;
-
-      salon.send(
-        `🆕 **Annonce détectée**\n` +
-        `🔗 Lien : ${annonce.lien}\n` +
-        `🏷️ Marque : ${annonce.marque}\n` +
-        `💰 Prix : ${annonce.prix}€\n` +
-        `📈 Revente estimée : ${annonce.revente}€\n` +
-        `💸 Bénéfice : ${benefice}€`
-      );
-    }
-  } catch (err) {
-    console.error('❌ Erreur annonces :', err.message);
+    channel.send(
+      `🆕 **Nouvelle annonce**
+🔗 ${item.url}
+👕 ${item.title}
+💰 Prix : ${price}€
+📈 Revente estimée : ${resale}€
+💸 Bénéfice : ${benefit}€`
+    );
   }
 }
 
-// Lancer la boucle toutes les 60 secondes
-setInterval(loopAnnonces, 60 * 1000);
-
-// Connexion à Discord (Render)
-client.login(process.env.DISCORD_TOKEN);
+client.login(config.token);
