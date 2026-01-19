@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const config = require('./config.json');
 const { fetchAnnonces } = require('./services/fetchAnnonces');
 const { note } = require('./utils/profit');
 const categories = require('./utils/categories');
@@ -76,4 +75,6 @@ ${annonce.titre}
   }
 }, 60000);
 
-client.login(config.token);
+client.login(process.env.DISCORD_TOKEN);
+
+
