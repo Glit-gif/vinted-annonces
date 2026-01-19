@@ -2,7 +2,8 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const fs = require("fs");
 const { fetchVintedItems } = require("./services/vintedScraper");
 const { getCategoryChannel } = require("./utils/categories");
-const config = require("./config.json");
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+
 
 const client = new Client({
   intents: [
@@ -53,4 +54,6 @@ async function checkVinted() {
   }
 }
 
-client.login(config.token);
+client.login(DISCORD_TOKEN);
+
+
