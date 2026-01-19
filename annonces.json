@@ -1,0 +1,26 @@
+[
+  {
+    "titre": "T-shirt Ralph Lauren bleu",
+    "marque": "ralph",
+    "categorie": "t-shirt",
+    "prix": 22,
+    "revente": 60,
+    "lien": "https://www.vinted.fr/items/123456"
+  },
+  {
+    "titre": "Pull Nike vintage",
+    "marque": "nike",
+    "categorie": "pull",
+    "prix": 30,
+    "revente": 75,
+    "lien": "https://www.vinted.fr/items/789012"
+  },
+  {
+    "titre": "Veste Carhartt",
+    "marque": "carhartt",
+    "categorie": "veste",
+    "prix": 45,
+    "revente": 110,
+    "lien": "https://www.vinted.fr/items/456789"
+  }
+]
