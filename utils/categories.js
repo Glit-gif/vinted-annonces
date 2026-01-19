@@ -1,15 +1,13 @@
-function getCategorieSalon(categorie) {
-  const map = {
-    't-shirt': 't-shirt',
-    'tee-shirt': 't-shirt',
-    'pull': 'pull',
-    'sweat': 'sweat',
-    'chaussures': 'chaussures',
-    'veste': 'veste',
-    'manteau': 'manteau'
-  };
+function getCategoryChannel(title) {
+  const t = title.toLowerCase();
 
-  return map[categorie.toLowerCase()] || 'autres';
+  if (t.includes("t-shirt") || t.includes("tee")) return "t-shirt";
+  if (t.includes("pull") || t.includes("sweat")) return "pull";
+  if (t.includes("veste")) return "veste";
+  if (t.includes("manteau")) return "manteau";
+  if (t.includes("chaussure") || t.includes("sneaker")) return "chaussures";
+
+  return "autres";
 }
 
-module.exports = { getCategorieSalon };
+module.exports = { getCategoryChannel };
