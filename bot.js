@@ -22,38 +22,39 @@ client.once("ready", () => {
 });
 
 async function checkVinted() {
+  console.log("Recherche d'annonces Vinted...");
+
   const items = await fetchVintedItems({
-    search_text: "",
+    search_text: "nike"
   });
 
-  for (const item of items) {
-    if (seen.includes(item.id)) continue;
+  console.log("Annonces trouvées :", items.length);
 
-    seen.push(item.id);
-    fs.writeFileSync("./data/seen.json", JSON.stringify(seen, null, 2));
+  if (items.length === 0) return;
 
-    const category = getCategoryChannel(item.title);
-    const channel = client.channels.cache.find(
-      c => c.name === category
-    );
+  const item = items[0]; // on force UNE annonce
 
-    if (!channel) continue;
+  const category = getCategoryChannel(item.title);
+  console.log("Catégorie détectée :", category);
 
-    const price = item.price?.amount || "?";
-    const resale = Math.round(price * 2.5);
-    const benefit = resale - price;
+  const channel = client.channels.cache.find(
+    c => c.name === category
+  );
 
-    channel.send(
-      `🆕 **Nouvelle annonce**
+  if (!channel) {
+    console.log("Salon introuvable :", category);
+    return;
+  }
+
+  channel.send(
+    `🧪 **TEST ANNONCE**
 🔗 ${item.url}
 👕 ${item.title}
-💰 Prix : ${price}€
-📈 Revente estimée : ${resale}€
-💸 Bénéfice : ${benefit}€`
-    );
-  }
+💰 Prix : ${item.price?.amount || "?"}€`
+  );
 }
 
 client.login(DISCORD_TOKEN);
+
 
 
